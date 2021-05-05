@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "11646254860",
+    "firebase_url": "https://arham-835ab.firebaseio.com",
+    "project_id": "arham-835ab",
+    "storage_bucket": "arham-835ab.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:11646254860:android:b946ec5f8897dcea315329",
+        "android_client_info": {
+          "package_name": "com.arhamtechmind.world_general_info"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "11646254860-o2svncaec26t6gjiqrvvs693l43d6o0d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_nuO-H8r1-V5N77IEE9yIA7Wk0VUBFCo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "11646254860-o2svncaec26t6gjiqrvvs693l43d6o0d.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
