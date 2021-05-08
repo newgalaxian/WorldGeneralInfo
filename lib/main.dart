@@ -5,6 +5,7 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:world_general_info/AdHelper.dart';
 import 'package:world_general_info/my_widget/my_card.dart';
 import 'package:world_general_info/pages/continent.dart';
 import 'package:world_general_info/pages/continents/ui_view/continents_view.dart';
@@ -17,7 +18,8 @@ import 'package:world_general_info/pages/wonderers_old.dart';
 import 'package:world_general_info/ui_theme/my_app_theme.dart';
 
 void main() {
-
+  WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
   runApp(MyApp());
 }
 
@@ -46,22 +48,91 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Future<InitializationStatus> _initGoogleMobileAds() {
-    return MobileAds.instance.initialize();
-  }
+  BannerAd _bannerAd;
+
+  bool _isBannerAdReady = false;
+
+  InterstitialAd _interstitialAd;
+
+  bool _isInterstitialAdReady = false;
 
   String _selectedItem = 'Sun';
-  static const _url_pp = 'http://www.arhamtechmind.com/privacy-policy/';
-  static const _url_rate = 'https://play.google.com/store/apps/details?id=com.arhamtechmind.world_general_info';
-  static const _url_more = 'https://play.google.com/store/apps/developer?id=hamroapp';
 
-  List _options = ['More Apps', 'Share App', 'Rate App', 'Privacy Policy'];
-  void _launchURL() async =>
-      await canLaunch(_url_pp) ? await launch(_url_pp) : throw 'Could not launch $_url_pp';
+  // static const _url_pp = 'http://www.arhamtechmind.com/privacy-policy/';
+  static const _url_rate =
+      'https://play.google.com/store/apps/details?id=com.arhamtechmind.world_general_info';
+  static const _url_more =
+      'https://play.google.com/store/apps/developer?id=AppTeam';
+
+  List _options = ['More Apps', 'Share App', 'Rate App'];
+
+  // void _launchURL() async =>
+  // await canLaunch(_url_pp) ? await launch(_url_pp) : throw 'Could not launch $_url_pp';
   void _launchURL2() async =>
-      await canLaunch(_url_rate) ? await launch(_url_rate) : throw 'Could not launch $_url_rate';
+      await canLaunch(_url_rate)
+          ? await launch(_url_rate)
+          : throw 'Could not launch $_url_rate';
+
   void _launchURL3() async =>
-      await canLaunch(_url_more) ? await launch(_url_more) : throw 'Could not launch $_url_more';
+      await canLaunch(_url_more)
+          ? await launch(_url_more)
+          : throw 'Could not launch $_url_more';
+
+  void createInterstitialAd() {
+    _interstitialAd = InterstitialAd(
+      adUnitId: AdHelper.interstitialAdUnitId,
+      request: AdRequest(),
+      listener: AdListener(
+        onAdLoaded: (_) {
+          _isInterstitialAdReady = true;
+        },
+        onAdFailedToLoad: (ad, err) {
+          print('Failed to load an interstitial ad: ${err.message}');
+          _isInterstitialAdReady = false;
+          ad.dispose();
+        },
+        onAdClosed: (_) {
+          createInterstitialAd();
+        },
+      ),
+    )..load();
+  }
+  @override
+  void initState() {
+    super.initState();
+
+    _bannerAd = BannerAd(
+      adUnitId: AdHelper.bannerAdUnitId,
+      request: AdRequest(),
+      size: AdSize.banner,
+      listener: AdListener(
+        onAdLoaded: (_) {
+          setState(() {
+            _isBannerAdReady = true;
+          });
+        },
+        onAdFailedToLoad: (ad, err) {
+          print('Failed to load a banner ad: ${err.message}');
+          _isBannerAdReady = false;
+          ad.dispose();
+        },
+      ),
+    );
+    _bannerAd.load();
+    // banner close ;;;;;;;;;;;;;;;;;;;;;;
+
+     createInterstitialAd();
+  }
+
+
+  @override
+  void dispose() {
+    _bannerAd.dispose();
+    _interstitialAd.dispose();
+
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,26 +143,24 @@ class _MyHomePageState extends State<MyHomePage> {
           PopupMenuButton(
             itemBuilder: (BuildContext bc) {
               return _options
-                  .map((day) => PopupMenuItem(
-                        child: Text(day),
-                        value: day,
-                      ))
+                  .map((day) =>
+                  PopupMenuItem(
+                    child: Text(day),
+                    value: day,
+                  ))
                   .toList();
             },
-            onSelected: (index)  {
+            onSelected: (index) {
               switch (index) {
                 case 'More Apps':
-                 _launchURL3();
+                  _launchURL3();
                   break;
                 case 'Share App':
                   Share.share('''Install World General Info 
                   https://play.google.com/store/apps/details?id=com.arhamtechmind.world_general_info''');
                   break;
                 case 'Rate App':
-                 _launchURL2();
-                  break;
-                case 'Privacy Policy':
-                  _launchURL();
+                  _launchURL2();
                   break;
               }
             },
@@ -100,316 +169,360 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Container(
         color: Colors.black87,
-        child: ListView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                ContinentsView(),
-                InkWell(
-                  child: my_card(
-                      context,
-                      IconButton(
-                        icon: Icon(
-                          Icons.landscape,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {},
-                      ),
-                      Colors.white,
-                      "Continents"),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        PageTransition(
-                            type: PageTransitionType.leftToRight,
-                            child: MyContinents()));
-                  },
+            if (_isBannerAdReady)
+              Align(
+                alignment: Alignment.topCenter,
+                child: Container(
+                  width: _bannerAd.size.width.toDouble(),
+                  height: _bannerAd.size.height.toDouble(),
+                  child: AdWidget(ad: _bannerAd),
                 ),
-                InkWell(
-                  child: my_card(
-                      context,
-                      IconButton(
-                        icon: Icon(
-                          Icons.cloud,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {},
+              ),
+            Expanded(
+              child: ListView(
+                children: [
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: <Widget>[
+                      ContinentsView(),
+                      InkWell(
+                        child: my_card(
+                            context,
+                            IconButton(
+                              icon: Icon(
+                                Icons.landscape,
+                                color: Colors.white,
+                              ),
+                              onPressed: () {},
+                            ),
+                            Colors.white,
+                            "Continents"),
+                        onTap: () {
+                          if (_isInterstitialAdReady) {
+                            _interstitialAd.show();
+                          }
+                          Navigator.push(
+                              context,
+                              PageTransition(
+                                  type: PageTransitionType.leftToRight,
+                                  child: MyContinents()));
+                        },
                       ),
-                      Colors.amber,
-                      "Oceans"),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        PageTransition(
-                            type: PageTransitionType.leftToRight,
-                            child: MySwipePage()));
-                  },
-                ),
-                InkWell(
-                  child: my_card(
-                      context,
-                      IconButton(
-                        icon: Icon(
-                          Icons.landscape,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {},
+                      InkWell(
+                        child: my_card(
+                            context,
+                            IconButton(
+                              icon: Icon(
+                                Icons.cloud,
+                                color: Colors.white,
+                              ),
+                              onPressed: () {},
+                            ),
+                            Colors.amber,
+                            "Oceans"),
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              PageTransition(
+                                  type: PageTransitionType.leftToRight,
+                                  child: MySwipePage()));
+                        },
                       ),
-                      Colors.amber,
-                      "Top 10 Mountains"),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        PageTransition(
-                            type: PageTransitionType.leftToRight,
-                            child: Mtn()));
-                  },
-                ),
-                InkWell(
-                  child: my_card(
-                      context,
-                      IconButton(
-                        icon: Icon(
-                          Icons.add_road,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {},
+                      InkWell(
+                        child: my_card(
+                            context,
+                            IconButton(
+                              icon: Icon(
+                                Icons.landscape,
+                                color: Colors.white,
+                              ),
+                              onPressed: () {},
+                            ),
+                            Colors.amber,
+                            "Top 10 Mountains"),
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              PageTransition(
+                                  type: PageTransitionType.leftToRight,
+                                  child: Mtn()));
+                        },
                       ),
-                      Colors.amber,
-                      "Top 10 Rivers"),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        PageTransition(
-                            type: PageTransitionType.leftToRight,
-                            child: Rivers()));
-                  },
-                ),
-                InkWell(
-                  child: my_card(
-                      context,
-                      IconButton(
-                        icon: Icon(
-                          Icons.cloud,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {},
+                      InkWell(
+                        child: my_card(
+                            context,
+                            IconButton(
+                              icon: Icon(
+                                Icons.add_road,
+                                color: Colors.white,
+                              ),
+                              onPressed: () {},
+                            ),
+                            Colors.amber,
+                            "Top 10 Rivers"),
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              PageTransition(
+                                  type: PageTransitionType.leftToRight,
+                                  child: Rivers()));
+                        },
                       ),
-                      Colors.amber,
-                      "Top 10"),
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        PageTransition(
-                            type: PageTransitionType.leftToRight,
-                            child: TopTen()));
-                  },
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(
-                      left: 16, right: 16, top: 16, bottom: 12),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient:
-                          LinearGradient(colors: [Colors.cyan, Colors.indigo]),
-                      //color: MyAppTheme.background,
-                      borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(8.0),
-                          bottomLeft: Radius.circular(8.0),
-                          bottomRight: Radius.circular(8.0),
-                          topRight: Radius.circular(68.0)),
-                      boxShadow: <BoxShadow>[
-                        BoxShadow(
-                            color: MyAppTheme.grey.withOpacity(0.2),
-                            offset: Offset(1.1, 1.1),
-                            blurRadius: 10.0),
-                      ],
-                    ),
-                    child: Column(
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              top: 16, left: 16, right: 16),
+                      InkWell(
+                        child: my_card(
+                            context,
+                            IconButton(
+                              icon: Icon(
+                                Icons.cloud,
+                                color: Colors.white,
+                              ),
+                              onPressed: () {},
+                            ),
+                            Colors.amber,
+                            "Top 10"),
+                        onTap: () {
+                          if (_isInterstitialAdReady) {
+                            _interstitialAd.show();
+                          }
+                          Navigator.push(
+                              context,
+                              PageTransition(
+                                  type: PageTransitionType.leftToRight,
+                                  child: TopTen()));
+                        },
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 16, right: 16, top: 16, bottom: 12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                                colors: [Colors.cyan, Colors.indigo]),
+                            //color: MyAppTheme.background,
+                            borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(8.0),
+                                bottomLeft: Radius.circular(8.0),
+                                bottomRight: Radius.circular(8.0),
+                                topRight: Radius.circular(68.0)),
+                            boxShadow: <BoxShadow>[
+                              BoxShadow(
+                                  color: MyAppTheme.grey.withOpacity(0.2),
+                                  offset: Offset(1.1, 1.1),
+                                  blurRadius: 10.0),
+                            ],
+                          ),
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.cloud,
-                                      color: Colors.white,
-                                    ),
-                                    onPressed: () {},
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Text(
-                                      '7 Wonders of the World',
-                                      textAlign: TextAlign.start,
-                                      style: TextStyle(
-                                        fontSize: 14.0,
-                                        color: Colors.white,
-                                        letterSpacing: 1.2,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: 10.0,
-                              ),
-                              Container(
-                                height: 1,
-                                decoration: BoxDecoration(
-                                  color: HexColor('#fffffff').withOpacity(0.9),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(4.0)),
-                                ),
-                              ),
-                              SizedBox(
-                                height: 8,
-                              ),
                               Padding(
-                                padding: const EdgeInsets.all(4.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                padding: const EdgeInsets.only(
+                                    top: 16, left: 16, right: 16),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
-                                    InkWell(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(colors: [
-                                            Colors.indigo,
-                                            Colors.cyan
-                                          ]),
-                                          //color: MyAppTheme.background,
-                                          borderRadius: BorderRadius.only(
-                                              topLeft: Radius.circular(8.0),
-                                              bottomLeft: Radius.circular(8.0),
-                                              bottomRight: Radius.circular(8.0),
-                                              topRight: Radius.circular(68.0)),
-                                          boxShadow: <BoxShadow>[
-                                            BoxShadow(
-                                                color: MyAppTheme.grey
-                                                    .withOpacity(0.2),
-                                                offset: Offset(1.1, 1.1),
-                                                blurRadius: 10.0),
-                                          ],
+                                    Row(
+                                      mainAxisAlignment:
+                                      MainAxisAlignment.start,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.cloud,
+                                            color: Colors.white,
+                                          ),
+                                          onPressed: () {},
                                         ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          children: [
-                                            IconButton(
-                                              icon: Icon(
-                                                Icons.landscape_outlined,
-                                                color: Colors.white,
-                                              ),
-                                              onPressed: () {},
+                                        Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Text(
+                                            '7 Wonders of the World',
+                                            textAlign: TextAlign.start,
+                                            style: TextStyle(
+                                              fontSize: 14.0,
+                                              color: Colors.white,
+                                              letterSpacing: 1.2,
                                             ),
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.all(16.0),
-                                              child: Text(
-                                                'Modern',
-                                                textAlign: TextAlign.start,
-                                                style: TextStyle(
-                                                  fontSize: 14.0,
-                                                  color: Colors.white,
-                                                  letterSpacing: 1.2,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                          ),
                                         ),
-                                      ),
-                                      onTap: () {
-                                        Navigator.push(
-                                            context,
-                                            PageTransition(
-                                                type: PageTransitionType
-                                                    .leftToRight,
-                                                child: ModernWonderers()));
-                                      },
+                                      ],
                                     ),
                                     SizedBox(
-                                      width: 10,
+                                      height: 10.0,
                                     ),
-                                    InkWell(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(colors: [
-                                            Colors.indigo,
-                                            Colors.cyan
-                                          ]),
-                                          //color: MyAppTheme.background,
-                                          borderRadius: BorderRadius.only(
-                                              topLeft: Radius.circular(8.0),
-                                              bottomLeft: Radius.circular(8.0),
-                                              bottomRight: Radius.circular(8.0),
-                                              topRight: Radius.circular(68.0)),
-                                          boxShadow: <BoxShadow>[
-                                            BoxShadow(
-                                                color: MyAppTheme.grey
-                                                    .withOpacity(0.2),
-                                                offset: Offset(1.1, 1.1),
-                                                blurRadius: 10.0),
-                                          ],
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          children: [
-                                            IconButton(
-                                              icon: Icon(
-                                                Icons.landscape_outlined,
-                                                color: Colors.white,
-                                              ),
-                                              onPressed: () {},
-                                            ),
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.all(16.0),
-                                              child: Text(
-                                                'Ancient',
-                                                textAlign: TextAlign.start,
-                                                style: TextStyle(
-                                                  fontSize: 14.0,
-                                                  color: Colors.white,
-                                                  letterSpacing: 1.2,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                    Container(
+                                      height: 1,
+                                      decoration: BoxDecoration(
+                                        color: HexColor('#fffffff')
+                                            .withOpacity(0.9),
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(4.0)),
                                       ),
-                                      onTap: () {
-                                        Navigator.push(
-                                            context,
-                                            PageTransition(
-                                                type: PageTransitionType
-                                                    .leftToRight,
-                                                child: AncientWonderers()));
-                                      },
+                                    ),
+                                    SizedBox(
+                                      height: 8,
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(4.0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                          InkWell(
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                    colors: [
+                                                      Colors.indigo,
+                                                      Colors.cyan
+                                                    ]),
+                                                //color: MyAppTheme.background,
+                                                borderRadius: BorderRadius.only(
+                                                    topLeft:
+                                                    Radius.circular(8.0),
+                                                    bottomLeft:
+                                                    Radius.circular(8.0),
+                                                    bottomRight:
+                                                    Radius.circular(8.0),
+                                                    topRight:
+                                                    Radius.circular(68.0)),
+                                                boxShadow: <BoxShadow>[
+                                                  BoxShadow(
+                                                      color: MyAppTheme.grey
+                                                          .withOpacity(0.2),
+                                                      offset: Offset(1.1, 1.1),
+                                                      blurRadius: 10.0),
+                                                ],
+                                              ),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                                children: [
+                                                  IconButton(
+                                                    icon: Icon(
+                                                      Icons.landscape_outlined,
+                                                      color: Colors.white,
+                                                    ),
+                                                    onPressed: () {},
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                    const EdgeInsets.all(
+                                                        16.0),
+                                                    child: Text(
+                                                      'Modern',
+                                                      textAlign:
+                                                      TextAlign.start,
+                                                      style: TextStyle(
+                                                        fontSize: 14.0,
+                                                        color: Colors.white,
+                                                        letterSpacing: 1.2,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            onTap: () {
+                                              Navigator.push(
+                                                  context,
+                                                  PageTransition(
+                                                      type: PageTransitionType
+                                                          .leftToRight,
+                                                      child:
+                                                      ModernWonderers()));
+                                            },
+                                          ),
+                                          SizedBox(
+                                            width: 10,
+                                          ),
+                                          InkWell(
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                    colors: [
+                                                      Colors.indigo,
+                                                      Colors.cyan
+                                                    ]),
+                                                //color: MyAppTheme.background,
+                                                borderRadius: BorderRadius.only(
+                                                    topLeft:
+                                                    Radius.circular(8.0),
+                                                    bottomLeft:
+                                                    Radius.circular(8.0),
+                                                    bottomRight:
+                                                    Radius.circular(8.0),
+                                                    topRight:
+                                                    Radius.circular(68.0)),
+                                                boxShadow: <BoxShadow>[
+                                                  BoxShadow(
+                                                      color: MyAppTheme.grey
+                                                          .withOpacity(0.2),
+                                                      offset: Offset(1.1, 1.1),
+                                                      blurRadius: 10.0),
+                                                ],
+                                              ),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                                children: [
+                                                  IconButton(
+                                                    icon: Icon(
+                                                      Icons.landscape_outlined,
+                                                      color: Colors.white,
+                                                    ),
+                                                    onPressed: () {},
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                    const EdgeInsets.all(
+                                                        16.0),
+                                                    child: Text(
+                                                      'Ancient',
+                                                      textAlign:
+                                                      TextAlign.start,
+                                                      style: TextStyle(
+                                                        fontSize: 14.0,
+                                                        color: Colors.white,
+                                                        letterSpacing: 1.2,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            onTap: () {
+                                              if (_isInterstitialAdReady) {
+                                                _interstitialAd.show();
+                                              }
+                                              Navigator.push(
+                                                  context,
+                                                  PageTransition(
+                                                      type: PageTransitionType
+                                                          .leftToRight,
+                                                      child:
+                                                      AncientWonderers()));
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 8,
                                     ),
                                   ],
                                 ),
                               ),
-                              SizedBox(
-                                height: 8,
-                              ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

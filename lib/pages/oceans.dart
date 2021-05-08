@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:world_general_info/AdHelper.dart';
 import 'package:world_general_info/my_widget/ocean_name.dart';
 import 'package:world_general_info/ui_theme/my_app_theme.dart';
 
@@ -14,10 +16,38 @@ class _MySwipePageState extends State<MySwipePage> {
   PageController _controller =
       PageController(initialPage: 0, viewportFraction: 0.85);
   String oceanDetails;
+  BannerAd _bannerAd;
+
+  bool _isBannerAdReady = false;
+  @override
+  void initState() {
+    super.initState();
+
+    _bannerAd = BannerAd(
+      adUnitId: AdHelper.bannerAdUnitId,
+      request: AdRequest(),
+      size: AdSize.banner,
+      listener: AdListener(
+        onAdLoaded: (_) {
+          setState(() {
+            _isBannerAdReady = true;
+          });
+        },
+        onAdFailedToLoad: (ad, err) {
+          print('Failed to load a banner ad: ${err.message}');
+          _isBannerAdReady = false;
+          ad.dispose();
+        },
+      ),
+    );
+    _bannerAd.load();
+
+  }
 
   @override
   void dispose() {
     _controller.dispose();
+    _bannerAd.dispose();
     super.dispose();
   }
   final  TextStyle optionStyle =TextStyle(
@@ -47,134 +77,151 @@ class _MySwipePageState extends State<MySwipePage> {
           ),
         ),
       ),
-      body: PageView(
-        controller: _controller,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(32.0),
-              side: BorderSide(color: Colors.white70, width: 1),
-            ),
-            elevation: 5,
-            margin: EdgeInsets.all(10.0),
-            color: Colors.cyan[700],
-            child: Padding(
-              padding: const EdgeInsets.all(6.0),
-              child: ListView(
-                children: [
-                  Text(
-                    'Some Facts',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      letterSpacing: 1.3,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Divider(color: Colors.white),
-                  ),
-                  Column(
-                    children: [
-                      Text(''),
-                  ListTile(
-                    title:  Text('Mariana Trench, Pacific 35,827 ft',style: optionStyle,textAlign: TextAlign.start,),
-                    dense: true,
-                    leading: Icon(Icons.workspaces_filled,
-                      color: Colors.white,
-                    ),
-                  ),
-                      ListTile(
-                        title:  Text('Puerto Rico Trench, Atlantic 30,246 ft',style: optionStyle,textAlign: TextAlign.start,),
-                        dense: true,
-                        leading: Icon(Icons.workspaces_filled,
-                          color: Colors.white,
-                        ),
-                      ),
-                      ListTile(
-                        title:  Text('Java Trench, Indian 24,460 ft',style: optionStyle,textAlign: TextAlign.start,),
-                        dense: true,
-                        leading: Icon(Icons.workspaces_filled,
-                          color: Colors.white,
-                        ),
-                      ),
-                      ListTile(
-                        title:  Text('Arctic Basin, Arctic 18,456 ft',style: optionStyle,textAlign: TextAlign.start,),
-                        dense: true,
-                        leading: Icon(Icons.workspaces_filled,
-                          color: Colors.white,
-                        ),
-                      ),
-                      ListTile(
-                        title:  Text('Southern Ocean, 23,737 ft',style: optionStyle,textAlign: TextAlign.start,),
-                        dense: true,
-                        leading: Icon(Icons.workspaces_filled,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox( height: 15.0, ),
-                ],
+          if (_isBannerAdReady)
+            Align(
+              alignment: Alignment.topCenter,
+              child: Container(
+                width: _bannerAd.size.width.toDouble(),
+                height: _bannerAd.size.height.toDouble(),
+                child: AdWidget(ad: _bannerAd),
               ),
             ),
-          ),
-          ocean_name(
-            context,
-            Colors.red[900],
-            'Pacific Ocean',
-            ocean[0],
-            FadeInImage.assetNetwork(
-              placeholder: 'assets/images/world_map.png',
-              image: "https://firebasestorage.googleapis.com/v0/b/arham-835ab.appspot.com/o/pacific_ocean.png?alt=media&token=38718415-8ac9-4edf-9cfc-ca0aca0a7f04",
-              fit: BoxFit.fill,
-            ),
-          ),
-          ocean_name(
-            context,
-            Colors.green[700],
-            'Atlantic Ocean',
-            ocean[1],
-            FadeInImage.assetNetwork(
-              placeholder: 'assets/images/world_map.png',
-              image: "https://firebasestorage.googleapis.com/v0/b/arham-835ab.appspot.com/o/atlantic_ocean.png?alt=media&token=0f867f69-77c2-464e-bb0c-cffa9fdfa3dc",
-              fit: BoxFit.fill,
-            ),
-          ),
-          ocean_name(
-            context,
-            Colors.indigo[400],
-            'Indian Ocean',
-            ocean[2],
-            FadeInImage.assetNetwork(
-              placeholder: 'assets/images/world_map.png',
-              image: "https://firebasestorage.googleapis.com/v0/b/arham-835ab.appspot.com/o/indian_ocean.png?alt=media&token=64905835-807d-4673-8782-60d54b29fa02",
-              fit: BoxFit.fill,
-            ),
-          ),
-          ocean_name(
-            context,
-            Colors.blueGrey,
-            'Arctic Ocean',
-            ocean[3],
-            FadeInImage.assetNetwork(
-              placeholder: 'assets/images/world_map.png',
-              image: "https://firebasestorage.googleapis.com/v0/b/arham-835ab.appspot.com/o/arctic_ocean.png?alt=media&token=858dc4d1-7ae9-4ebf-9ed5-d0b54fdf79d5",
-              fit: BoxFit.fill,
-            ),
+          Expanded(
+            child: PageView(
+              controller: _controller,
+              children: [
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(32.0),
+                    side: BorderSide(color: Colors.white70, width: 1),
+                  ),
+                  elevation: 5,
+                  margin: EdgeInsets.all(10.0),
+                  color: Colors.cyan[700],
+                  child: Padding(
+                    padding: const EdgeInsets.all(6.0),
+                    child: ListView(
+                      children: [
+                        Text(
+                          'Some Facts',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 18.0,
+                            letterSpacing: 1.3,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Divider(color: Colors.white),
+                        ),
+                        Column(
+                          children: [
+                            Text(''),
+                            ListTile(
+                              title:  Text('Mariana Trench, Pacific 35,827 ft',style: optionStyle,textAlign: TextAlign.start,),
+                              dense: true,
+                              leading: Icon(Icons.workspaces_filled,
+                                color: Colors.white,
+                              ),
+                            ),
+                            ListTile(
+                              title:  Text('Puerto Rico Trench, Atlantic 30,246 ft',style: optionStyle,textAlign: TextAlign.start,),
+                              dense: true,
+                              leading: Icon(Icons.workspaces_filled,
+                                color: Colors.white,
+                              ),
+                            ),
+                            ListTile(
+                              title:  Text('Java Trench, Indian 24,460 ft',style: optionStyle,textAlign: TextAlign.start,),
+                              dense: true,
+                              leading: Icon(Icons.workspaces_filled,
+                                color: Colors.white,
+                              ),
+                            ),
+                            ListTile(
+                              title:  Text('Arctic Basin, Arctic 18,456 ft',style: optionStyle,textAlign: TextAlign.start,),
+                              dense: true,
+                              leading: Icon(Icons.workspaces_filled,
+                                color: Colors.white,
+                              ),
+                            ),
+                            ListTile(
+                              title:  Text('Southern Ocean, 23,737 ft',style: optionStyle,textAlign: TextAlign.start,),
+                              dense: true,
+                              leading: Icon(Icons.workspaces_filled,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox( height: 15.0, ),
+                      ],
+                    ),
+                  ),
+                ),
+                ocean_name(
+                  context,
+                  Colors.red[900],
+                  'Pacific Ocean',
+                  ocean[0],
+                  FadeInImage.assetNetwork(
+                    placeholder: 'assets/images/world_map.png',
+                    image: "https://firebasestorage.googleapis.com/v0/b/arham-835ab.appspot.com/o/pacific_ocean.png?alt=media&token=38718415-8ac9-4edf-9cfc-ca0aca0a7f04",
+                    fit: BoxFit.fill,
+                  ),
+                ),
+                ocean_name(
+                  context,
+                  Colors.green[700],
+                  'Atlantic Ocean',
+                  ocean[1],
+                  FadeInImage.assetNetwork(
+                    placeholder: 'assets/images/world_map.png',
+                    image: "https://firebasestorage.googleapis.com/v0/b/arham-835ab.appspot.com/o/atlantic_ocean.png?alt=media&token=0f867f69-77c2-464e-bb0c-cffa9fdfa3dc",
+                    fit: BoxFit.fill,
+                  ),
+                ),
+                ocean_name(
+                  context,
+                  Colors.indigo[400],
+                  'Indian Ocean',
+                  ocean[2],
+                  FadeInImage.assetNetwork(
+                    placeholder: 'assets/images/world_map.png',
+                    image: "https://firebasestorage.googleapis.com/v0/b/arham-835ab.appspot.com/o/indian_ocean.png?alt=media&token=64905835-807d-4673-8782-60d54b29fa02",
+                    fit: BoxFit.fill,
+                  ),
+                ),
+                ocean_name(
+                  context,
+                  Colors.blueGrey,
+                  'Arctic Ocean',
+                  ocean[3],
+                  FadeInImage.assetNetwork(
+                    placeholder: 'assets/images/world_map.png',
+                    image: "https://firebasestorage.googleapis.com/v0/b/arham-835ab.appspot.com/o/arctic_ocean.png?alt=media&token=858dc4d1-7ae9-4ebf-9ed5-d0b54fdf79d5",
+                    fit: BoxFit.fill,
+                  ),
 
-          ),
-          ocean_name(
-            context,
-            Colors.teal[700],
-            'Antarctic Ocean',
-            ocean[4],
-            FadeInImage.assetNetwork(
-              placeholder: 'assets/images/world_map.png',
-              image: "https://firebasestorage.googleapis.com/v0/b/arham-835ab.appspot.com/o/antartic_ocean.png?alt=media&token=4d64688b-3b51-42ad-a023-03d82aeab626",
-              fit: BoxFit.fill,
+                ),
+                ocean_name(
+                  context,
+                  Colors.teal[700],
+                  'Antarctic Ocean',
+                  ocean[4],
+                  FadeInImage.assetNetwork(
+                    placeholder: 'assets/images/world_map.png',
+                    image: "https://firebasestorage.googleapis.com/v0/b/arham-835ab.appspot.com/o/antartic_ocean.png?alt=media&token=4d64688b-3b51-42ad-a023-03d82aeab626",
+                    fit: BoxFit.fill,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
