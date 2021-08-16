@@ -30,5 +30,27 @@ display image as splash screen
 
    </layer-list>
 ```
+# Remove the debug banner in flutter
+
+https://www.arhamtechmind.com/remove-the-debug-banner-in-flutter/
+ # add this line
+  debugShowCheckedModeBanner: false, 
+  
+```dart
+class MyApp extends StatelessWidget {
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'World General Info',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: MyHomePage(title: 'World General Info'),
+    );
+  }
+}
+```
 
 
