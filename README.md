@@ -2,6 +2,8 @@
 
 A new Flutter application.
 
+https://github.com/newgalaxian/WorldGeneralInfo/blob/main/world_info_1.jpg?raw=true
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
