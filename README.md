@@ -10,4 +10,25 @@ This is very simple app with all the basics of flutter.
 ![world_info_4](https://user-images.githubusercontent.com/12398746/129588028-aa2f5036-49c7-45f6-ab0a-3ea2fe72c30e.jpg)
 ![world_info_5](https://user-images.githubusercontent.com/12398746/129588030-c1d69eb4-6044-4c6c-a014-df5e089313ba.jpg)
 
+# Adding Splash Screen | Android launch screen
+
+https://flutter.dev/docs/development/ui/advanced/splash-screen
+
+display image as splash screen
+```xml
+   <?xml version="1.0" encoding="utf-8"?>
+   <!-- Modify this file to customize your launch splash screen -->
+   <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+     <!-- <item android:drawable="@color/splash_color" />
+    -->
+       <!--  You can insert your own image assets here -->
+       <item>
+          <bitmap
+               android:gravity="center"
+               android:src="@drawable/splash" />
+       </item>
+
+   </layer-list>
+```
+
 
