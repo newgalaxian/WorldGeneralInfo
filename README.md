@@ -52,5 +52,13 @@ class MyApp extends StatelessWidget {
   }
 }
 ```
-
+## Package used in pubspec.yaml
+```dart
+ country_provider: ^1.0.1
+  hexcolor: ^2.0.3
+  page_transition: ^1.1.7+6
+  share: ^2.0.1
+  url_launcher: ^6.0.3
+  google_mobile_ads: ^0.12.1+1
+```
 
